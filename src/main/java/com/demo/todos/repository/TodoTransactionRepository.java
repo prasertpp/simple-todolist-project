@@ -5,9 +5,12 @@ import com.demo.todos.model.entity.TodoListTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface TodoTransactionRepository extends JpaRepository<TodoListTransaction,String> {
+import java.util.UUID;
 
+@Repository
+public interface TodoTransactionRepository extends JpaRepository<TodoListTransaction,UUID> {
+
+     TodoListTransaction findAllByIdAndActivated(UUID id, String activated);
 
 
 }

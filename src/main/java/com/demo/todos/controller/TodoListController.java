@@ -8,7 +8,9 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,6 +28,16 @@ public class TodoListController {
         CommonResponse commonResponse = todoListService.insertTodoTransaction(request);
         ResponseEntity<CommonResponse> response = new ResponseEntity<>(commonResponse,commonResponse.getHttpStatus());
         logger.info("END IMPLEMENTING INSERT TODOLIST, response : {} ",commonResponse);
+        return response;
+    }
+
+
+    @PutMapping(value = "/{messageId}",produces = MediaType.APPLICATION_JSON_VALUE,  consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CommonResponse> updateTodo(@PathVariable("messageId") String messageId, @RequestBody TodoListInsertRequest request){
+        logger.info("START IMPLEMENTING UPDATE TODOLIST, message : {} ",request.getMessage());
+        CommonResponse commonResponse = todoListService.updateTodoTransaction(request,messageId);
+        ResponseEntity<CommonResponse> response = new ResponseEntity<>(commonResponse,commonResponse.getHttpStatus());
+        logger.info("END IMPLEMENTING UPDATE TODOLIST, response : {} ",commonResponse);
         return response;
     }
 
