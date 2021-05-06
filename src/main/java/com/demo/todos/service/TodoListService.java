@@ -27,6 +27,7 @@ import static com.demo.todos.constant.CommonConstant.SUCCESS_CODE;
 public class TodoListService {
 
     private static final Logger logger = LogManager.getLogger(TodoListService.class);
+
     @Autowired
     private TodoTransactionRepository todoTransactionRepository;
 
