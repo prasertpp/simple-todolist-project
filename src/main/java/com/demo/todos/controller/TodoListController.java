@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+
+
 @RestController
 public class TodoListController {
 
@@ -25,7 +28,7 @@ public class TodoListController {
     private TodoListService todoListService;
 
     @PostMapping(value = "",produces = MediaType.APPLICATION_JSON_VALUE,  consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CommonResponse> insertTodo(@RequestBody TodoListInsertRequest request){
+    public ResponseEntity<CommonResponse> insertTodo(@Valid @RequestBody TodoListInsertRequest request){
         logger.info("START IMPLEMENTING INSERT TODOLIST, message : {} ",request.getMessage());
         CommonResponse commonResponse = todoListService.insertTodoTransaction(request);
         ResponseEntity<CommonResponse> response = new ResponseEntity<>(commonResponse,commonResponse.getHttpStatus());
@@ -35,7 +38,7 @@ public class TodoListController {
 
 
     @PutMapping(value = "/{messageId}",produces = MediaType.APPLICATION_JSON_VALUE,  consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CommonResponse> updateTodo(@PathVariable("messageId") String messageId, @RequestBody TodoListInsertRequest request){
+    public ResponseEntity<CommonResponse> updateTodo(@Valid @PathVariable("messageId") String messageId, @RequestBody TodoListInsertRequest request){
         logger.info("START IMPLEMENTING UPDATE TODOLIST, message : {} ",request.getMessage());
         CommonResponse commonResponse = todoListService.updateTodoTransaction(request,messageId);
         ResponseEntity<CommonResponse> response = new ResponseEntity<>(commonResponse,commonResponse.getHttpStatus());
