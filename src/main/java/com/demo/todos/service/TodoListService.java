@@ -11,12 +11,17 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import static com.demo.todos.constant.CommonConstant.ACTIVATED_MESSAGE;
+import static com.demo.todos.constant.CommonConstant.INACTIVATED_MESSAGE;
+import static com.demo.todos.constant.CommonConstant.SUCCESS_CODE;
 
 @Service
 public class TodoListService {
@@ -32,7 +37,7 @@ public class TodoListService {
         CommonResponse commonResponse = new CommonResponse();
         if(saveResult != null){
             logger.info("INSERT SUCCESSFULLY");
-            commonResponse.setStatus("SUCCESS");
+            commonResponse.setStatus(SUCCESS_CODE);
             TodoListInsertResponse todoListInsertResponse =  new TodoListInsertResponse();
             todoListInsertResponse.setMessage(saveResult.getMessage());
             todoListInsertResponse.setMessageId(saveResult.getId().toString());
@@ -62,7 +67,7 @@ public class TodoListService {
             TodoListTransaction saveResult = todoTransactionRepository.save(updateTodoTransaction);
             if(saveResult != null){
                 logger.info("UPDATE SUCCESSFULLY");
-                commonResponse.setStatus("SUCCESS");
+                commonResponse.setStatus(SUCCESS_CODE);
                 TodoListInsertResponse todoListInsertResponse =  new TodoListInsertResponse();
                 todoListInsertResponse.setMessage(saveResult.getMessage());
                 todoListInsertResponse.setMessageId(saveResult.getId().toString());
@@ -70,6 +75,61 @@ public class TodoListService {
                 commonResponse.setHttpStatus(HttpStatus.OK);
             }else {
                 logger.error("UPDATE FAILED");
+                commonResponse.setStatus("ERROR");
+                ErrorResponse errorResponse = new ErrorResponse();
+                errorResponse.setError("Can't update to db");
+                commonResponse.setData(errorResponse);
+                commonResponse.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+//            transaction exists
+        }else {
+            logger.error("Transaction not found messageId :{}" ,messageIdStr);
+            commonResponse.setHttpStatus(HttpStatus.NOT_FOUND);
+            commonResponse.setStatus("NOT_FOUND");
+            ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setError("transaction todo list not found");
+            commonResponse.setData(errorResponse);
+        }
+        return commonResponse;
+    }
+
+    public CommonResponse getAllTodoTransaction(){
+        List<TodoListTransaction> todoListTransactionList = todoTransactionRepository.findAllByActivated(ACTIVATED_MESSAGE);
+        CommonResponse commonResponse = new CommonResponse();
+        commonResponse.setStatus(SUCCESS_CODE);
+        commonResponse.setHttpStatus(HttpStatus.OK);
+        ArrayList<TodoListInsertResponse> list = new ArrayList<>();
+        if(!CollectionUtils.isEmpty(todoListTransactionList)){
+            for(TodoListTransaction tran : todoListTransactionList){
+                TodoListInsertResponse item = new TodoListInsertResponse();
+                item.setMessage(tran.getMessage());
+                item.setMessageId(tran.getId().toString());
+                list.add(item);
+            }
+        }
+        commonResponse.setData(list);
+        return  commonResponse;
+    }
+
+    public CommonResponse removeTodoTransaction(String messageIdStr) {
+
+        UUID messageId = UUID.fromString(messageIdStr);
+        TodoListTransaction transaction = todoTransactionRepository.findAllByIdAndActivated(messageId,ACTIVATED_MESSAGE);
+        CommonResponse commonResponse = new CommonResponse();
+        if(transaction != null){
+            logger.info("FOUND TRANSACTION");
+            TodoListTransaction updateTodoTransaction =  prepareRemoveTodoTransaction(transaction);
+            TodoListTransaction saveResult = todoTransactionRepository.save(updateTodoTransaction);
+            if(saveResult != null){
+                logger.info("REMOVED SUCCESSFULLY");
+                commonResponse.setStatus(SUCCESS_CODE);
+                TodoListInsertResponse todoListInsertResponse =  new TodoListInsertResponse();
+                todoListInsertResponse.setMessage(saveResult.getMessage());
+                todoListInsertResponse.setMessageId(saveResult.getId().toString());
+                commonResponse.setData(todoListInsertResponse);
+                commonResponse.setHttpStatus(HttpStatus.OK);
+            }else {
+                logger.error("REMOVE FAILED");
                 commonResponse.setStatus("ERROR");
                 ErrorResponse errorResponse = new ErrorResponse();
                 errorResponse.setError("Can't update to db");
@@ -107,6 +167,16 @@ public class TodoListService {
         transaction.setUpdatedDate(Calendar.getInstance().getTime());
         transaction.setActivated(oldTransaction.getActivated());
         transaction.setMessage(request.getMessage());
+        return transaction;
+    }
+
+    private TodoListTransaction prepareRemoveTodoTransaction(TodoListTransaction oldTransaction){
+        TodoListTransaction transaction = new TodoListTransaction();
+        transaction.setId(oldTransaction.getId());
+        transaction.setCreatedDate(oldTransaction.getCreatedDate());
+        transaction.setUpdatedDate(Calendar.getInstance().getTime());
+        transaction.setActivated(INACTIVATED_MESSAGE);
+        transaction.setMessage(oldTransaction.getMessage());
         return transaction;
     }
 
